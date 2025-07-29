@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shooting Game</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #222;
+      border: 2px solid #fff;
+    }
+    h1 {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Shooting Game - Click Targets!</h1>
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let score = 0;
+    let targets = [];
+
+    // Create random targets
+    function spawnTarget() {
+      const radius = 20;
+      const x = Math.random() * (canvas.width - 2 * radius) + radius;
+      const y = Math.random() * (canvas.height - 2 * radius) + radius;
+      const dx = (Math.random() - 0.5) * 4;
+      const dy = (Math.random() - 0.5) * 4;
+      targets.push({ x, y, dx, dy, radius });
+    }
+
+    function drawTarget(target) {
+      ctx.beginPath();
+      ctx.arc(target.x, target.y, target.radius, 0, Math.PI * 2);
+      ctx.fillStyle = "red";
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    function updateTargets() {
+      for (let t of targets) {
+        t.x += t.dx;
+        t.y += t.dy;
+        // Bounce off edges
+        if (t.x < t.radius || t.x > canvas.width - t.radius) t.dx *= -1;
+        if (t.y < t.radius || t.y > canvas.height - t.radius) t.dy *= -1;
+      }
+    }
+
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "20px Arial";
+      ctx.fillText("Score: " + score, 10, 30);
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updateTargets();
+      for (let t of targets) drawTarget(t);
+      drawScore();
+      requestAnimationFrame(gameLoop);
+    }
+
+    // Handle shooting
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      for (let i = targets.length - 1; i >= 0; i--) {
+        const t = targets[i];
+        const dist = Math.hypot(t.x - clickX, t.y - clickY);
+        if (dist < t.radius) {
+          targets.splice(i, 1);
+          score += 1;
+          break;
+        }
+      }
+    });
+
+    // Start the game
+    for (let i = 0; i < 5; i++) spawnTarget();
+    setInterval(spawnTarget, 2000); // Add a new target every 2s
+    gameLoop();
+  </script>
+</body>
+</html>
